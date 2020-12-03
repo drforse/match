@@ -5,6 +5,8 @@ from image_match.goldberg import ImageSignature
 import json
 import os
 import sys
+from functools import wraps
+import certifi
 
 # =============================================================================
 # Globals
@@ -12,10 +14,14 @@ import sys
 es_url = os.environ['ELASTICSEARCH_URL']
 es_index = os.environ['ELASTICSEARCH_INDEX']
 es_doc_type = os.environ['ELASTICSEARCH_DOC_TYPE']
+es_login = os.environ['ELASTICSEARCH_LOGIN']
+es_secret = os.environ['ELASTICSEARCH_SECRET']
 all_orientations = os.environ['ALL_ORIENTATIONS']
 
+auth_token = os.environ['AUTH_TOKEN']
+
 app = Flask(__name__)
-es = Elasticsearch([es_url], verify_certs=True, timeout=60, max_retries=10, retry_on_timeout=True)
+es = Elasticsearch([es_url], verify_certs=True, timeout=60, max_retries=10, retry_on_timeout=True, ca_certs=certifi.where(), http_auth=(es_login, es_secret) if es_login else None)
 ses = SignatureES(es, index=es_index, doc_type=es_doc_type)
 gis = ImageSignature()
 
@@ -55,10 +61,19 @@ def get_image(url_field, file_field):
     else:
         return request.files[file_field].read(), True
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.args.get("token") != auth_token:
+            return json.dumps({}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
 # =============================================================================
 # Routes
 
 @app.route('/add', methods=['POST'])
+@login_required
 def add_handler():
     path = request.form['filepath']
     try:
@@ -79,6 +94,7 @@ def add_handler():
     })
 
 @app.route('/delete', methods=['DELETE'])
+@login_required
 def delete_handler():
     path = request.form['filepath']
     ids = ids_with_path(path)
@@ -91,6 +107,7 @@ def delete_handler():
     })
 
 @app.route('/search', methods=['POST'])
+@login_required
 def search_handler():
     img, bs = get_image('url', 'image')
     ao = request.form.get('all_orientations', all_orientations) == 'true'
@@ -112,6 +129,7 @@ def search_handler():
     })
 
 @app.route('/compare', methods=['POST'])
+@login_required
 def compare_handler():
     img1, bs1 = get_image('url1', 'image1')
     img2, bs2 = get_image('url2', 'image2')
@@ -127,6 +145,7 @@ def compare_handler():
     })
 
 @app.route('/count', methods=['GET', 'POST'])
+@login_required
 def count_handler():
     count = count_images()
     return json.dumps({
@@ -137,6 +156,7 @@ def count_handler():
     })
 
 @app.route('/list', methods=['GET', 'POST'])
+@login_required
 def list_handler():
     if request.method == 'GET':
         offset = max(int(request.args.get('offset', 0)), 0)
@@ -154,6 +174,7 @@ def list_handler():
     })
 
 @app.route('/ping', methods=['GET', 'POST'])
+@login_required
 def ping_handler():
     return json.dumps({
         'status': 'ok',
