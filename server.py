@@ -14,8 +14,8 @@ import certifi
 es_url = os.environ['ELASTICSEARCH_URL']
 es_index = os.environ['ELASTICSEARCH_INDEX']
 es_doc_type = os.environ['ELASTICSEARCH_DOC_TYPE']
-es_login = os.environ['ELASTICSEARCH_LOGIN']
-es_secret = os.environ['ELASTICSEARCH_SECRET']
+es_login = os.environ.get('ELASTICSEARCH_LOGIN')
+es_secret = os.environ.get('ELASTICSEARCH_SECRET')
 all_orientations = os.environ['ALL_ORIENTATIONS']
 
 auth_token = os.environ['AUTH_TOKEN']
