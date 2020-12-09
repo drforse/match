@@ -18,7 +18,7 @@ es_login = os.environ.get('ELASTICSEARCH_LOGIN')
 es_secret = os.environ.get('ELASTICSEARCH_SECRET')
 all_orientations = os.environ['ALL_ORIENTATIONS']
 
-auth_token = os.environ['AUTH_TOKEN']
+auth_token = os.environ.get('AUTH_TOKEN')
 
 app = Flask(__name__)
 es = Elasticsearch([es_url], verify_certs=True, timeout=60, max_retries=10, retry_on_timeout=True, ca_certs=certifi.where(), http_auth=(es_login, es_secret) if es_login else None)
@@ -64,7 +64,7 @@ def get_image(url_field, file_field):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if request.args.get("token") != auth_token:
+        if auth_token and request.args.get("token") != auth_token:
             return json.dumps({}), 403
         return f(*args, **kwargs)
     return decorated_function
