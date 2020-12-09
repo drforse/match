@@ -1,6 +1,6 @@
 .PHONY: all build push run dev
 
-DOCKER_TAG ?= dsys/match:latest
+DOCKER_TAG ?= match:1.0
 
 export PORT ?= 8888
 export ELASTICSEARCH_URL ?= elasticsearch:9200
@@ -22,7 +22,7 @@ run: build
 		-e ELASTICSEARCH_INDEX \
 		-e ELASTICSEARCH_DOC_TYPE \
 		-p $(PORT):$(PORT) \
-		-it $(DOCKER_TAG)
+		$(DOCKER_TAG)
 
 dev: build
 	docker-compose up
