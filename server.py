@@ -75,12 +75,13 @@ def login_required(f):
 @app.route('/add', methods=['POST'])
 @login_required
 def add_handler():
-    path = request.form['filepath']
-    try:
-        metadata = json.loads(request.form['metadata'])
-    except KeyError:
-        metadata = None
+    metadata = json.loads(request.form.get('metadata', 'null'))
     img, bs = get_image('url', 'image')
+    path = request.form.get('filepath')
+    if not path and bs:
+        raise ValueError('filepath must be provided if image is passed as "image"')
+    if not path:
+        path = img
 
     old_ids = ids_with_path(path)
     ses.add_image(path, img, bytestream=bs, metadata=metadata)
