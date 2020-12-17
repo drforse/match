@@ -7,8 +7,7 @@ services:
     command: ["/wait-for-it.sh", "-t", "60", "elasticsearch:9200", "--", "gunicorn", "-b", "0.0.0.0:8888", "-w", "4", "server:app"]
     links:
         - elasticsearch
-    restart_policy:
-        condition: always
+    restart: always
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
     environment:
@@ -17,8 +16,7 @@ services:
         - 127.0.0.1:9200:9200
     volumes:
         - esdata:/usr/share/elasticsearch/data
-    restart_policy:
-        condition: always
+    restart: always
 
 volumes:
   esdata:
