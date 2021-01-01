@@ -1,3 +1,5 @@
+from typing import Union
+
 from elasticsearch import Elasticsearch
 from flask import Flask, request
 from image_match.elasticsearch_driver import SignatureES
@@ -61,7 +63,7 @@ def dist_to_percent(dist):
     return (1 - dist) * 100
 
 
-def dist_from_percent(percent):
+def dist_from_percent(percent: Union[float, int]):
     return 1 - percent / 100
 
 
@@ -128,7 +130,7 @@ def search_handler():
     ao = request.form.get('all_orientations', all_orientations) == 'true'
     min_score = request.form.get('min_score', default_min_score)
     local_ses = SignatureES(es, index=es_index, doc_type=es_doc_type,
-                            distance_cutoff=dist_from_percent(min_score))
+                            distance_cutoff=dist_from_percent(float(min_score)))
 
     matches = local_ses.search_image(
         path=img,
