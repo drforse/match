@@ -29,14 +29,15 @@ gis = ImageSignature()
 # if the index already exists
 es.indices.create(index=es_index, ignore=400)
 
+
 # =============================================================================
 # Helpers
-
 def ids_with_path(path):
     matches = es.search(index=es_index,
                         _source='_id',
                         q='path:' + json.dumps(path))
     return [m['_id'] for m in matches['hits']['hits']]
+
 
 def paths_at_location(offset, limit):
     search = es.search(index=es_index,
@@ -45,21 +46,26 @@ def paths_at_location(offset, limit):
                        _source='path')
     return [h['_source']['path'] for h in search['hits']['hits']]
 
+
 def count_images():
     return es.count(index=es_index)['count']
+
 
 def delete_ids(ids):
     for i in ids:
         es.delete(index=es_index, doc_type=es_doc_type, id=i, ignore=404)
 
+
 def dist_to_percent(dist):
     return (1 - dist) * 100
+
 
 def get_image(url_field, file_field):
     if url_field in request.form:
         return request.form[url_field], False
     else:
         return request.files[file_field].read(), True
+
 
 def login_required(f):
     @wraps(f)
@@ -68,6 +74,7 @@ def login_required(f):
             return json.dumps({}), 403
         return f(*args, **kwargs)
     return decorated_function
+
 
 # =============================================================================
 # Routes
@@ -94,6 +101,7 @@ def add_handler():
         'result': []
     })
 
+
 @app.route('/delete', methods=['DELETE'])
 @login_required
 def delete_handler():
@@ -106,6 +114,7 @@ def delete_handler():
         'method': 'delete',
         'result': []
     })
+
 
 @app.route('/search', methods=['POST'])
 @login_required
@@ -129,6 +138,7 @@ def search_handler():
         } for m in matches]
     })
 
+
 @app.route('/compare', methods=['POST'])
 @login_required
 def compare_handler():
@@ -145,6 +155,7 @@ def compare_handler():
         'result': [{ 'score': score }]
     })
 
+
 @app.route('/count', methods=['GET', 'POST'])
 @login_required
 def count_handler():
@@ -155,6 +166,7 @@ def count_handler():
         'method': 'count',
         'result': [count]
     })
+
 
 @app.route('/list', methods=['GET', 'POST'])
 @login_required
@@ -174,6 +186,7 @@ def list_handler():
         'result': paths
     })
 
+
 @app.route('/ping', methods=['GET', 'POST'])
 @login_required
 def ping_handler():
@@ -183,6 +196,7 @@ def ping_handler():
         'method': 'ping',
         'result': []
     })
+
 
 # =============================================================================
 # Error Handling
@@ -196,6 +210,7 @@ def bad_request(e):
         'result': []
     }), 400
 
+
 @app.errorhandler(404)
 def page_not_found(e):
     return json.dumps({
@@ -205,6 +220,7 @@ def page_not_found(e):
         'result': []
     }), 404
 
+
 @app.errorhandler(405)
 def method_not_allowed(e):
     return json.dumps({
@@ -213,6 +229,7 @@ def method_not_allowed(e):
         'method': '',
         'result': []
     }), 405
+
 
 @app.errorhandler(500)
 def server_error(e):
