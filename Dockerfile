@@ -20,7 +20,8 @@ ENV PORT=80 \
     ELASTICSEARCH_URL=elasticsearch:9200 \
     ELASTICSEARCH_INDEX=images \
     ELASTICSEARCH_DOC_TYPE=images \
-    ALL_ORIENTATIONS=true
+    ALL_ORIENTATIONS=true \
+    DEFAULT_MIN_SCORE=0.0
 
 CMD gunicorn \
     -t 60 \

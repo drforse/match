@@ -17,6 +17,7 @@ es_doc_type = os.environ['ELASTICSEARCH_DOC_TYPE']
 es_login = os.environ.get('ELASTICSEARCH_LOGIN')
 es_secret = os.environ.get('ELASTICSEARCH_SECRET')
 all_orientations = os.environ['ALL_ORIENTATIONS']
+default_min_score = float(os.environ['DEFAULT_MIN_SCORE'])
 
 auth_token = os.environ.get('AUTH_TOKEN')
 
@@ -58,6 +59,10 @@ def delete_ids(ids):
 
 def dist_to_percent(dist):
     return (1 - dist) * 100
+
+
+def dist_from_percent(percent):
+    return 1 - percent / 100
 
 
 def get_image(url_field, file_field):
@@ -121,11 +126,15 @@ def delete_handler():
 def search_handler():
     img, bs = get_image('url', 'image')
     ao = request.form.get('all_orientations', all_orientations) == 'true'
+    min_score = request.form.get('min_score', default_min_score)
+    local_ses = SignatureES(es, index=es_index, doc_type=es_doc_type,
+                            distance_cutoff=dist_from_percent(min_score))
 
-    matches = ses.search_image(
-            path=img,
-            all_orientations=ao,
-            bytestream=bs)
+    matches = local_ses.search_image(
+        path=img,
+        all_orientations=ao,
+        bytestream=bs
+    )
 
     return json.dumps({
         'status': 'ok',
@@ -152,7 +161,7 @@ def compare_handler():
         'status': 'ok',
         'error': [],
         'method': 'compare',
-        'result': [{ 'score': score }]
+        'result': [{'score': score}]
     })
 
 
